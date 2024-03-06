@@ -3,12 +3,17 @@ import matplotlib.pyplot as plt
 import openpyxl
 
 def read_excel_file(file_path):
+    # if the file is example_overall_results.xlsx then transpose the data
     if "overall" in file_path:
         return pd.read_excel(file_path, index_col=0).T
     else:
         return pd.read_excel(file_path, index_col=0)
 
 def compare_and_visualize(scenario_name, df_operations, df_overall, writer):
+    # Your comparison and analysis logic here
+    # For example, you can extract specific columns, perform calculations, and plot graphs
+
+    # Extract relevant columns for comparison
     relevant_columns = ["Total revenues (€)", "Day-ahead revenues (€)", "Energy lack balancing revenues (€)",
                         "Energy surplus balancing revenues (€)", "primary up band revenues (€)",
                         "primary down band revenues (€)", "secondary up band revenues (€)",
@@ -20,16 +25,6 @@ def compare_and_visualize(scenario_name, df_operations, df_overall, writer):
             "Overall Results": df_overall.loc[:, relevant_columns].sum()
         })
 
-        # Additional statistical calculations
-        df_statistics = pd.DataFrame({
-            "Mean": df_compare.mean(),
-            "Min": df_compare.min(),
-            "Max": df_compare.max(),
-            "Std Dev": df_compare.std(),
-            "Sum": df_compare.sum(),
-            "Count": df_compare.count()
-        })
-
         # Plotting bar chart for comparison
         plt.figure(figsize=(10, 6))
         df_compare.plot(kind='bar', rot=45, color=['skyblue', 'lightgreen'])
@@ -38,20 +33,15 @@ def compare_and_visualize(scenario_name, df_operations, df_overall, writer):
         plt.savefig(f"Comparison_{scenario_name}.png")
         plt.close()
 
-        # Save the comparison chart and statistical information to Excel
-        sheet_name_compare = f"{scenario_name} Comparison"
-        sheet_name_statistics = f"{scenario_name} Statistics"
-
-        if sheet_name_compare in writer.book.sheetnames:
-            idx_compare = writer.book.sheetnames.index(sheet_name_compare)
-            writer.book.remove(writer.book.worksheets[idx_compare])
-
-        if sheet_name_statistics in writer.book.sheetnames:
-            idx_statistics = writer.book.sheetnames.index(sheet_name_statistics)
-            writer.book.remove(writer.book.worksheets[idx_statistics])
-
-        df_compare.to_excel(writer, sheet_name=sheet_name_compare, index=True)  # Set index to True
-        df_statistics.to_excel(writer, sheet_name=sheet_name_statistics, index=True)  # Set index to True
+        # Save the comparison chart to Excel
+        sheet_name = f"{scenario_name} Comparison"
+        
+        # if the sheet already exists, remove it
+        if sheet_name in writer.book.sheetnames:
+            idx = writer.book.sheetnames.index(sheet_name)
+            writer.book.remove(writer.book.worksheets[idx])
+            
+        df_compare.to_excel(writer, sheet_name=sheet_name)
 
     except KeyError as e:
         print(f"\nError: One or more relevant columns not found in the dataframes.")
@@ -59,16 +49,22 @@ def compare_and_visualize(scenario_name, df_operations, df_overall, writer):
         print(f"Error details: {e}")
 
 def create_excel_template(scenario_names):
+    # Create a new Excel workbook
     writer = pd.ExcelWriter('Output_Template.xlsx', engine='openpyxl')
+
+    # Write each scenario's comparison to a separate sheet
     for scenario_name in scenario_names:
-        df_compare = pd.DataFrame()
-        df_statistics = pd.DataFrame()
-        df_compare.to_excel(writer, sheet_name=f"{scenario_name} Comparison", index=True)  # Set index to True
-        df_statistics.to_excel(writer, sheet_name=f"{scenario_name} Statistics", index=True)  # Set index to True
+        df = pd.DataFrame()
+        df.to_excel(writer, sheet_name=f"{scenario_name} Comparison")
+
+    # Save the Excel workbook
     writer._save()
 
 def main():
+    # Get the number of scenarios to compare
     num_scenarios = int(input("Enter the number of scenarios to compare (1, 2, or 3): "))
+
+    # Get file paths for each scenario
     scenario_files = []
     scenario_names = []
     for i in range(num_scenarios):
@@ -78,12 +74,17 @@ def main():
         scenario_files.append((file_path_operations, file_path_overall))
         scenario_names.append(scenario_name)
 
+    # Create the Excel template with empty sheets
     create_excel_template(scenario_names)
 
+    # Open the Excel workbook in append mode
     with pd.ExcelWriter('Output_Template.xlsx', engine='openpyxl', mode='a') as writer:
         for i, (file_path_operations, file_path_overall) in enumerate(scenario_files):
+            # Read Excel files for each scenario
             df_operations = read_excel_file(file_path_operations)
             df_overall = read_excel_file(file_path_overall)
+
+            # Compare and visualize results for each scenario
             compare_and_visualize(scenario_names[i], df_operations, df_overall, writer)
 
 if __name__ == "__main__":

@@ -50,8 +50,8 @@ def compare_and_visualize(scenario_name, df_operations, df_overall, writer):
             idx_statistics = writer.book.sheetnames.index(sheet_name_statistics)
             writer.book.remove(writer.book.worksheets[idx_statistics])
 
-        df_compare.to_excel(writer, sheet_name=sheet_name_compare, index=True)  # Set index to True
-        df_statistics.to_excel(writer, sheet_name=sheet_name_statistics, index=True)  # Set index to True
+        df_compare.to_excel(writer, sheet_name=sheet_name_compare, index=False)
+        df_statistics.to_excel(writer, sheet_name=sheet_name_statistics, index=False)
 
     except KeyError as e:
         print(f"\nError: One or more relevant columns not found in the dataframes.")
@@ -63,8 +63,8 @@ def create_excel_template(scenario_names):
     for scenario_name in scenario_names:
         df_compare = pd.DataFrame()
         df_statistics = pd.DataFrame()
-        df_compare.to_excel(writer, sheet_name=f"{scenario_name} Comparison", index=True)  # Set index to True
-        df_statistics.to_excel(writer, sheet_name=f"{scenario_name} Statistics", index=True)  # Set index to True
+        df_compare.to_excel(writer, sheet_name=f"{scenario_name} Comparison", index=False)
+        df_statistics.to_excel(writer, sheet_name=f"{scenario_name} Statistics", index=False)
     writer._save()
 
 def main():
